@@ -5,7 +5,8 @@ import SplashScreen from './components/SplashScreen';
 import Sidebar from './components/Sidebar';
 import AIChat from './components/AIChat';
 import MusicPlayer from './components/MusicPlayer';
-import { User, Building, Trophy, Code, Mail, AppWindow, FileCode, FileCode2, Brain, GraduationCap } from 'lucide-react';
+import ProjectSlider from './components/ProjectSlider';
+import { User, Building, Trophy, Code, Mail, AppWindow, FileCode, FileCode2, Brain, GraduationCap, FolderGit2 } from 'lucide-react';
 
 export default function App() {
   const [showSplash, setShowSplash] = useState(true);
@@ -147,6 +148,11 @@ export default function App() {
               <Brain size={20} className="text-[var(--accent)]" /> AI Integration
             </div>
           </div>
+        </section>
+
+        <section id="proyek" className="reveal py-20 border-b border-[var(--border)]">
+          <h2 className="section-title"><FolderGit2 className="text-[var(--accent)]" size={32} /> Proyek</h2>
+          <ProjectSlider />
         </section>
 
         <section id="kontak" className="reveal pt-20 pb-28">

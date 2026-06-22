@@ -15,7 +15,7 @@ async function startServer() {
   // Middleware for parsing JSON bodies
   app.use(express.json());
 
-  // API endpoint for AI chat using Gemini API
+  // API endpoint for AI chat
   app.post('/api/chat', async (req, res) => {
     try {
       const { prompt } = req.body;
@@ -25,27 +25,47 @@ async function startServer() {
 
       const systemInstruction = "Anda adalah AI Assistant cerdas di website portofolio Kevin Creig N.S. Kevin adalah siswa SMK Bhakti Mulia Pare, jurusan Rekayasa Perangkat Lunak (RPL). Anda dapat menjawab pertanyaan apa pun dari pengguna. Gunakan bahasa Indonesia yang ramah, profesional, dan sedikit santai.";
 
-      // Menggunakan API gratis dari Pollinations AI yang tidak membutuhkan API Key
-      const response = await fetch('https://text.pollinations.ai/', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          messages: [
-            { role: 'system', content: systemInstruction },
-            { role: 'user', content: prompt }
-          ],
-          model: 'openai'
-        })
-      });
+      const envKey = process.env.GEMINI_API_KEY;
+      const isValidEnv = envKey && envKey !== 'MY_GEMINI_API_KEY';
 
-      if (!response.ok) {
-        throw new Error(`Pollinations API error: ${response.status}`);
+      // Fallback ke Gemini API jika API Key ada di environment variables (misal di setting Vercel)
+      if (isValidEnv) {
+        // Dynamic import to avoid errors if not installed properly, though it is in package.json
+        const { GoogleGenAI } = await import('@google/genai');
+        const ai = new GoogleGenAI({ apiKey: envKey });
+        
+        const response = await ai.models.generateContent({
+          model: 'gemini-2.5-flash',
+          contents: prompt,
+          config: {
+            systemInstruction: systemInstruction,
+          }
+        });
+        
+        return res.status(200).json({ text: response.text });
+      } else {
+        // Menggunakan API gratis dari Pollinations AI jika belum ada API Key di environment
+        const response = await fetch('https://text.pollinations.ai/', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            messages: [
+              { role: 'system', content: systemInstruction },
+              { role: 'user', content: prompt }
+            ],
+            model: 'openai'
+          })
+        });
+
+        if (!response.ok) {
+          throw new Error(`Pollinations API error: ${response.status}`);
+        }
+
+        const text = await response.text();
+        return res.status(200).json({ text: text });
       }
-
-      const text = await response.text();
-      res.status(200).json({ text: text });
     } catch (error: any) {
       console.error('Error with AI API:', error);
       res.status(500).json({ error: error.message || 'Internal Server Error' });
