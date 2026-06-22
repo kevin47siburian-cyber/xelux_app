@@ -28,8 +28,35 @@ async function startServer() {
       const envKey = process.env.GEMINI_API_KEY;
       const isValidEnv = envKey && envKey !== 'MY_GEMINI_API_KEY';
 
-      // Fallback ke Gemini API jika API Key ada di environment variables (misal di setting Vercel)
-      if (isValidEnv) {
+      const deepseekKey = process.env.DEEPSEEK_API_KEY;
+      const isValidDeepseek = deepseekKey && deepseekKey !== 'MY_DEEPSEEK_API_KEY';
+
+      // Fallback ke DeepSeek API jika DEEPSEEK_API_KEY ada di environment variables
+      if (isValidDeepseek) {
+        const response = await fetch('https://api.deepseek.com/chat/completions', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${deepseekKey}`
+          },
+          body: JSON.stringify({
+            model: 'deepseek-chat',
+            messages: [
+              { role: 'system', content: systemInstruction },
+              { role: 'user', content: prompt }
+            ]
+          })
+        });
+
+        if (!response.ok) {
+          throw new Error(`DeepSeek API error: ${response.status}`);
+        }
+
+        const data = await response.json();
+        return res.status(200).json({ text: data.choices[0].message.content });
+      }
+      // Fallback ke Gemini API jika GEMINI_API_KEY ada di environment variables (misal di setting Vercel)
+      else if (isValidEnv) {
         // Dynamic import to avoid errors if not installed properly, though it is in package.json
         const { GoogleGenAI } = await import('@google/genai');
         const ai = new GoogleGenAI({ apiKey: envKey });

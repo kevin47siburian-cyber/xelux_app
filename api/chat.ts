@@ -18,7 +18,32 @@ export default async function handler(req: any, res: any) {
     const envKey = process.env.GEMINI_API_KEY;
     const isValidEnv = envKey && envKey !== 'MY_GEMINI_API_KEY';
 
-    if (isValidEnv) {
+    const deepseekKey = process.env.DEEPSEEK_API_KEY;
+    const isValidDeepseek = deepseekKey && deepseekKey !== 'MY_DEEPSEEK_API_KEY';
+
+    if (isValidDeepseek) {
+      const response = await fetch('https://api.deepseek.com/chat/completions', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${deepseekKey}`
+        },
+        body: JSON.stringify({
+          model: 'deepseek-chat',
+          messages: [
+            { role: 'system', content: systemInstruction },
+            { role: 'user', content: prompt }
+          ]
+        })
+      });
+
+      if (!response.ok) {
+        throw new Error(`DeepSeek API error: ${response.status}`);
+      }
+
+      const data = await response.json();
+      return res.status(200).json({ text: data.choices[0].message.content });
+    } else if (isValidEnv) {
       const ai = new GoogleGenAI({ apiKey: envKey });
       
       const response = await ai.models.generateContent({
