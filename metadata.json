@@ -1,0 +1,6 @@
+{
+  "name": "Kevin Creig Portfolio",
+  "description": "Portofolio pribadi Kevin Creig N.S, siswa SMK Bhakti Mulia Pare jurusan RPL.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
